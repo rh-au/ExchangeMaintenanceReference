@@ -2,7 +2,7 @@
 
 $S = "Server"
 
-#Drain hub transport service 
+#Drain hub transport service
 Set-ServerComponentState -Identity $S -Component HubTransport -State Draining -Requester Maintenance
 
 #Redirect queued messages -> Use FQDN
