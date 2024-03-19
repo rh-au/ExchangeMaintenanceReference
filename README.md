@@ -1,31 +1,34 @@
-## ExchangeMaintenanceReference
+### ExchangeMaintenanceReference
 
-$S = "Server"
+##### Empty transport queue
+`Set-ServerComponentState <ServerName> -Component HubTransport -State Draining -Requester Maintenance`
 
-#Drain hub transport service
-Set-ServerComponentState -Identity $S -Component HubTransport -State Draining -Requester Maintenance
+##### Drain transport queue
+`Restart-Service MSExchangeTransport`
 
-#Redirect queued messages -> Use FQDN
-Redirect-Message -Server $S -Target "target.domain.com"
+##### Drain UM [2016]
+`Set-ServerComponentState <ServerName> -Component UMCallRouter -State Draining -Requester Maintenance`
 
-#Suspend from DAG
-Suspend-ClusterNode $S
+##### Maintenance script
+`CD $ExScripts`
 
-#Disable database copy automatic activeion -> DB copies to DAG members
-Set-MailboxServer $S -DatabaseCopyActivationDisabledAndMoveNow $true
+`.\StartDagServerMaintenance.ps1 -ServerName <ServerName> -MoveComment Maintenance -PauseClusterNode`
 
-#Get DB copy automatic activation policy -> Note
-Get-MailboxServer $S | Select-Object DatabaseCopyAutoActivationPolicy
+##### Redirect pending messages
+`Redirect-Message -Server <ServerName> -Target <Server FQDN>`
 
-#Block DB copy automatic activation policy
-Set-MailboxServer $S -DatabaseCopyAutoActivationPolicy Blocked
+##### Maintenance mode
+`Set-ServerComponentState <ServerName> -Component ServerWideOffline -State Inactive -Requester Maintenance`
 
-#Get mounted DB copies -> Perform switchover if not auto
-Get-MailboxDatabaseCopyStatus -Server $S | Where-Object {$_.Status -eq "Mounted"} | Format-Table -AutoSize
-Move-ActiveMailboxDatabase -Server $S -ActivateOnServer "target" -SkipMoveSuppressionChecks -Confirm:$false
+##### Verify maintenance mode [Monitoring+RecoveryActionsEnabled = Active]
+`Get-ServerComponentState <ServerName> | Format-Table Component,State -Autosize`
 
-#Verify transport queue empty
-Get-Queue
+##### Verify no hosted copies
+`Get-MailboxServer <ServerName> | Format-List DatabaseCopyAutoActivationPolicy`
 
-#Set maintenance mode -> 
-Set-ServerComponentState $S -Component ServerWideOffline -State Inactive -Requester Maintenance
+##### Verify paused cluster
+`Get-ClusterNode <ServerName> | Format-List`
+
+##### Verify queue empty
+`Get-Queue`
+
