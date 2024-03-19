@@ -34,3 +34,25 @@ https://setup.cloud.microsoft/exchange/exchange-update
 ##### Verify queue empty
 `Get-Queue`
 
+### Reboot + Update
+
+##### Revert maintenance mode
+`Set-ServerComponentState <ServerName> -Component ServerWideOffline -State Active -Requester Maintenance`
+
+##### Accept UM
+`Set-ServerComponentState <ServerName> -Component UMCallRouter -State Active -Requester Maintenance`
+
+##### Maintenance script
+`CD $ExScripts`
+`.\StopDagServerMaintenance.ps1 -serverName <ServerName>`
+
+##### Enable transport queue
+`Set-ServerComponentState <ServerName> -Component HubTransport -State Active -Requester Maintenance`
+
+##### Resume transport activity
+`Restart-Service MSExchangeTransport`
+
+##### Verify reverted maintenance mode
+`Get-ServerComponentState <ServerName> | Format-Table Component,State -Autosize`
+
+
