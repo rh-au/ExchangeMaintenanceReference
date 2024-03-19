@@ -1,6 +1,6 @@
 ### ExchangeMaintenanceReference
 
-[https://setup.cloud.microsoft/exchange/exchange-update?redirect=true](https://setup.cloud.microsoft/exchange/exchange-update)
+https://setup.cloud.microsoft/exchange/exchange-update
 
 ##### Empty transport queue
 `Set-ServerComponentState <ServerName> -Component HubTransport -State Draining -Requester Maintenance`
